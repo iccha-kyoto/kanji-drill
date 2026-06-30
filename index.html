@@ -133,7 +133,7 @@
     <button class="btn" id="againBtn">同じ範囲をもう一度</button>
     <button class="btn sub" id="menuBtn2">メニューへ</button></section>
   <section id="weak">
-    <div class="wtop"><div style="font-size:18px;font-weight:800;">💪 苦手リスト</div><button class="btn sub sm" id="weakBack">メニュー</button></div>
+    <div class="wtop"><div style="font-size:18px;font-weight:800;">💪 苦手リスト</div><button class="btn ng sm" id="weakReset" style="margin-right:6px;">🗑 リセット</button><button class="btn sub sm" id="weakBack">メニュー</button></div>
     <div class="mini">まちがえた回数が多い順。「練習」でその語だけ出題します（モードは下で選択）。</div>
     <div class="chips" id="weakMode" style="margin:4px 0;">
       <div class="chip on" data-wmode="yomi">読み🎤</div><div class="chip" data-wmode="kaki">書き✍️</div></div>
@@ -268,6 +268,7 @@ let weakMode="yomi";
 $("#weakMode").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;$("#weakMode").querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');weakMode=c.dataset.wmode;});
 $("#weakListBtn").onclick=()=>{renderWeak();show("#weak");};
 $("#weakBack").onclick=()=>show("#setup");
+$("#weakReset").onclick=function(){if(!confirm("苦手リストをすべて消します。よろしいですか？\n（学習カレンダー・今日の復習は残ります）"))return;for(var id in store.stats){store.stats[id].w=0;}persist();renderWeak();refreshDaily();alert("苦手リストをリセットしました。");};
 function renderWeak(){
   const list=weakItems().map(it=>({it,w:store.stats[it.id].w})).sort((a,b)=>b.w-a.w);
   const groups=[["3回以上まちがい",x=>x.w>=3],["2回まちがい",x=>x.w===2],["1回まちがい",x=>x.w===1]];
