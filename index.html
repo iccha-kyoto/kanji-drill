@@ -71,6 +71,21 @@
   .wrow b{font-size:17px;}.wrow small{color:var(--sub);flex:1;}.wrow em{color:var(--bad);font-weight:800;font-style:normal;}
   .small{font-size:12px;color:#9fb3c8;text-align:center;margin-top:4px;}
   .mini{font-size:12px;color:#cfe6ff;}
+#cal{display:none;flex-direction:column;flex:1;padding:14px 16px 24px;color:#fff;gap:10px;}
+  #cal .ctop{display:flex;justify-content:space-between;align-items:center;}
+  #calNav{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 4px;}
+  #calNav b{font-size:18px;min-width:130px;text-align:center;}
+  #calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  #calGrid .wd{text-align:center;font-size:12px;color:#cfe6ff;padding:2px 0;font-weight:800;}
+  #calGrid .cell{aspect-ratio:1/1;border-radius:10px;background:rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  #calGrid .cell.done{background:linear-gradient(180deg,#5fd08a,#1fb35a);}
+  #calGrid .cell.today{outline:3px solid var(--accent);outline-offset:-1px;}
+  #calGrid .cell.empty{background:transparent;}
+  #calGrid .cell .dn{font-size:11px;color:#cfe6ff;}
+  #calGrid .cell.done .dn{color:#eafff2;}
+  #calGrid .cell .mk{font-size:17px;line-height:1.1;}
+  #calStat{background:rgba(255,255,255,.96);color:var(--ink);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-around;text-align:center;font-weight:800;font-size:13px;}
+  #calStat b{display:block;font-size:22px;color:var(--good);}
 </style></head>
 <body><div id="app">
   <button id="soundBtn">🔊</button>
@@ -81,7 +96,7 @@
         <button class="btn blue" id="reviewTodayBtn">今日の復習<br><span class="mini" id="dueLbl">0問</span></button>
         <button class="btn sub" id="weakListBtn">苦手リスト<br><span class="mini" id="weakLbl">0問</span></button>
       </div>
-      <div class="small" id="todayLog" style="color:var(--sub);"></div>
+      <button class="btn sub" id="calBtn" style="width:100%;margin-top:8px;">📅 学習カレンダー（記録）</button><div class="small" id="todayLog" style="color:var(--sub);margin-top:6px;"></div>
     </div>
     <div class="panel"><h2>① だん</h2><div class="chips" id="danChips"></div></div>
     <div class="panel"><h2>② セクション</h2><div class="secgrid" id="secChips"></div>
@@ -123,6 +138,13 @@
     <div class="chips" id="weakMode" style="margin:4px 0;">
       <div class="chip on" data-wmode="yomi">読み🎤</div><div class="chip" data-wmode="kaki">書き✍️</div></div>
     <div id="weakBody"></div>
+  </section>
+  <section id="cal">
+    <div class="ctop"><div style="font-size:18px;font-weight:800;">📅 学習カレンダー</div><button class="btn sub sm" id="calBack">メニュー</button></div>
+    <div class="mini">勉強した日が ⭕ になります。毎日つづけよう！</div>
+    <div id="calNav"><button class="btn ghost sm" id="calPrev">◀</button><b id="calTitle"></b><button class="btn ghost sm" id="calNext">▶</button></div>
+    <div id="calGrid"></div>
+    <div id="calStat"></div>
   </section>
 </div>
 <script>
@@ -189,7 +211,7 @@ function buildSecs(){secWrap.innerHTML="";SECS.forEach(s=>{const ok=secHas(setDa
   clearSel();selKind="sec";const first=SECS.find(s=>secHas(setDan,s));selSec=first;[...secWrap.children].forEach(c=>{if(c.dataset.sec===first)c.classList.add('on');});}
 buildSecs();
 $("#modeChips").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;$("#modeChips").querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');setMode=c.dataset.mode;});
-function show(id){["#setup","#quiz","#done","#weak"].forEach(s=>$(s).style.display="none");$(id).style.display="flex";if(id==="#setup")refreshDaily();}
+function show(id){["#setup","#quiz","#done","#weak","#cal"].forEach(s=>$(s).style.display="none");$(id).style.display="flex";if(id==="#setup")refreshDaily();}
 function refreshDaily(){$("#dueLbl").textContent=dueItems().length+"問";$("#weakLbl").textContent=weakItems().length+"問";const c=store.log[today()]||0;$("#todayLog").textContent=c?("今日やった: "+c+"問"):"";}
 
 /* ----- セッション ----- */
@@ -260,4 +282,30 @@ function renderWeak(){
   $("#weakBody").querySelectorAll('button[data-ids]').forEach(b=>b.onclick=()=>{const its=b.dataset.ids.split(",").map(i=>byId[i]).filter(Boolean);if(!its.length)return;if(!pctx)setupPad();setMode=weakMode;baseMix=true;baseItems=its.slice();baseTitle="苦手 "+its.length+"問";startSession(shuffle(its),"苦手 "+its.length+"問");});
 }
 refreshDaily();
+let calY,calM;
+$("#calBtn").onclick=function(){var d=new Date();calY=d.getFullYear();calM=d.getMonth();renderCal();show("#cal");};
+$("#calBack").onclick=function(){show("#setup");};
+$("#calPrev").onclick=function(){calM--;if(calM<0){calM=11;calY--;}renderCal();};
+$("#calNext").onclick=function(){calM++;if(calM>11){calM=0;calY++;}renderCal();};
+function renderCal(){
+  var WD=["日","月","火","水","木","金","土"];
+  $("#calTitle").textContent=calY+"年"+(calM+1)+"月";
+  var startDow=new Date(calY,calM,1).getDay();
+  var days=new Date(calY,calM+1,0).getDate();
+  var tdy=today(),html="",monthDone=0,i,d;
+  for(i=0;i<7;i++)html+='<div class="wd">'+WD[i]+'</div>';
+  for(i=0;i<startDow;i++)html+='<div class="cell empty"></div>';
+  for(d=1;d<=days;d++){
+    var ds=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    var c=store.log[ds]||0,done=c>0;if(done)monthDone++;
+    var cls="cell"+(done?" done":"")+(ds===tdy?" today":"");
+    html+='<div class="'+cls+'"><span class="dn">'+d+'</span><span class="mk">'+(done?"⭕":"・")+'</span></div>';
+  }
+  $("#calGrid").innerHTML=html;
+  var streak=0,cur=new Date();
+  if(!(store.log[ymd(cur)]>0))cur.setDate(cur.getDate()-1);
+  while(store.log[ymd(cur)]>0){streak++;cur.setDate(cur.getDate()-1);}
+  var totalDays=0,totalQ=0;for(var k in store.log){if(store.log[k]>0){totalDays++;totalQ+=store.log[k];}}
+  $("#calStat").innerHTML='<div>今月やった日<b>'+monthDone+'日</b></div><div>連続<b>'+streak+'日</b></div><div>合計問題<b>'+totalQ+'</b></div>';
+}
 </script></body></html>
