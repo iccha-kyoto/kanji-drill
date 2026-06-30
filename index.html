@@ -155,15 +155,15 @@ $("#soundBtn").onclick=()=>{soundOn=!soundOn;$("#soundBtn").textContent=soundOn?
 
 /* ----- 音声認識（インスタンス再利用） ----- */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let rec=null,recBusy=false;
+let rec=null,recBusy=false,autoListen=false;
 function kata2hira(s){return s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));}
 function norm(s){return kata2hira((s||"")).replace(/[\s　・、。,.!！?？ー]/g,"");}
 function voiceHit(list,it){const ny=norm(it.y);for(const r of list){const nr=norm(r);if(!nr)continue;if(nr===ny)return true;if((r||"").indexOf(it.t)>=0)return true;if(ny.length>=2&&nr.indexOf(ny)>=0)return true;}return false;}
 function ensureRec(){if(rec||!SR)return;rec=new SR();rec.lang="ja-JP";rec.interimResults=false;rec.maxAlternatives=5;
   rec.onresult=e=>{const list=[];for(let i=0;i<e.results.length;i++){const r=e.results[i];for(let j=0;j<r.length;j++)list.push(r[j].transcript);}
     if(voiceHit(list,items[idx]))voiceCorrect();else $("#voiceStatus").textContent="🤔 「"+(list[0]||"")+"」… おしい！もう一度どうぞ";};
-  rec.onerror=ev=>{$("#voiceStatus").textContent=(ev.error==="not-allowed")?"⚠️ マイクの使用を許可してください":"もう一度どうぞ";};
-  rec.onend=()=>{recBusy=false;$("#micBtn").disabled=false;};}
+  rec.onerror=ev=>{if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){autoListen=false;$("#voiceStatus").textContent="⚠️ マイクの使用を許可してください（画面タップで再開）";}else{$("#voiceStatus").textContent="🎤 画面をタップして読んでね";}};
+  rec.onend=()=>{recBusy=false;$("#micBtn").disabled=false;if(autoListen&&!revealed&&!answered&&setMode==="yomi")setTimeout(()=>{if(autoListen&&!revealed&&!answered&&!recBusy)startVoice();},500);};}
 function startVoice(){if(!SR){$("#voiceStatus").textContent="⚠️ この端末は音声認識に対応していません";return;}if(recBusy)return;recBusy=true;ensureRec();
   try{ac().resume();}catch(e){}$("#micBtn").disabled=true;$("#voiceStatus").textContent="🎤 聞いています…　声に出して読んでね";
   try{rec.start();}catch(e){recBusy=false;$("#micBtn").disabled=false;}}
@@ -206,7 +206,7 @@ $("#startBtn").onclick=()=>{try{ac().resume();}catch(e){}
   if(!pctx)setupPad();startSession(baseItems.slice(),baseTitle);};
 $("#reviewTodayBtn").onclick=()=>{const d=dueItems();if(!d.length){alert("今日の復習はありません。新しいセクションを進めましょう！");return;}if(!pctx)setupPad();baseMix=true;baseItems=d.slice();baseTitle="今日の復習";startSession(shuffle(d),"今日の復習");};
 function startSession(list,title){items=list;quizTitle=title;idx=0;sessionWrong=[];show("#quiz");render();}
-$("#backBtn").onclick=()=>{if(rec)try{rec.abort();}catch(e){}show("#setup");};
+$("#backBtn").onclick=()=>{autoListen=false;if(rec)try{rec.abort();}catch(e){}show("#setup");};
 $("#menuBtn2").onclick=()=>show("#setup");
 $("#againBtn").onclick=()=>{let l=baseItems.slice();if(baseMix)l=shuffle(l);startSession(l,baseTitle);};
 $("#reviewBtn").onclick=()=>{baseMix=true;baseItems=lastWrong.slice();startSession(lastWrong.slice(),quizTitle.replace(/（復習）/,"")+"（復習）");};
@@ -221,19 +221,19 @@ function render(){
   $("#qhead").textContent=quizTitle+"  "+(idx+1)+" / "+items.length;
   $("#prog").style.width=(idx/items.length*100)+"%";updTally();
   $("#qlabel").textContent=setMode==="yomi"?"読み 🎤":"書き ✍️";
-  if(setMode==="yomi"){$("#sentence").innerHTML=ulKanji(it.s,it.t);$("#ansHint").textContent="下線の言葉を声に出して読もう";$("#padwrap").style.display="none";}
+  if(setMode==="yomi"){$("#sentence").innerHTML=ulKanji(it.s,it.t);$("#ansHint").textContent="🎤 声に出して読もう（聞き取れないときは画面をタップ）";$("#padwrap").style.display="none";}
   else{$("#sentence").innerHTML=repKana(it.s,it.t,it.y);$("#ansHint").textContent="下線を漢字で書いてみよう";$("#padwrap").style.display="flex";clearPad();}
   $("#masked").style.display="block";$("#ans").style.display="none";$("#ansSub").style.display="none";$("#voiceStatus").textContent="";
   $("#prevBtn").style.visibility=idx>0?"visible":"hidden";
-  $("#micBtn").style.display=(setMode==="yomi"&&SR)?"block":"none";$("#micBtn").disabled=false;
+  $("#micBtn").style.display="none";$("#micBtn").disabled=false;autoListen=false;if(setMode==="yomi"&&SR){autoListen=true;setTimeout(()=>{if(autoListen&&!revealed&&!answered)startVoice();},350);}
   $("#clearBtn").style.display=(setMode==="kaki")?"block":"none";
   $("#revealBtn").style.display="block";$("#judgeRow").style.display="none";
 }
-function doReveal(){revealed=true;const it=items[idx];$("#masked").style.display="none";
+function doReveal(){revealed=true;autoListen=false;if(rec)try{rec.abort();}catch(e){}const it=items[idx];$("#masked").style.display="none";
   $("#ans").style.display="block";$("#ans").textContent=setMode==="yomi"?it.y:it.t;
   $("#ansSub").style.display="block";$("#ansSub").textContent=setMode==="yomi"?("（"+it.t+"）"):("（"+it.y+"）");
   $("#micBtn").style.display="none";$("#clearBtn").style.display="none";$("#revealBtn").style.display="none";$("#judgeRow").style.display="flex";}
-function judge(ok,silent){if(answered)return;answered=true;const it=items[idx];if(!ok)sessionWrong.push(it);record(it,ok);if(!silent){ok?chime():buzz();}
+function judge(ok,silent){if(answered)return;answered=true;autoListen=false;const it=items[idx];if(!ok)sessionWrong.push(it);record(it,ok);if(!silent){ok?chime():buzz();}
   if(idx<items.length-1){idx++;render();}else finish();}
 function finish(){const w=sessionWrong.length,c=items.length-w;
   $("#doneInfo").innerHTML='<span style="color:#7be3a6;">⭕ '+c+'問</span>　／　<span style="color:#ff9a9a;">❌ '+w+'問</span>';
@@ -241,7 +241,7 @@ function finish(){const w=sessionWrong.length,c=items.length-w;
   if(w>0){$("#reviewBtn").style.display="block";$("#reviewBtn").textContent="❌ まちがえた "+w+"問を復習";$("#doneEmoji").textContent="📝";$("#doneTitle").textContent="おつかれさま！";}
   else{$("#reviewBtn").style.display="none";$("#doneEmoji").textContent="💯";$("#doneTitle").textContent="全問クリア！";if(soundOn)chime();}
   show("#done");}
-$("#micBtn").onclick=startVoice;$("#clearBtn").onclick=clearPad;$("#revealBtn").onclick=doReveal;
+$("#micBtn").onclick=startVoice;$("#card").addEventListener("click",e=>{if(e.target.closest("button"))return;if(setMode==="yomi"&&SR&&!revealed&&!answered&&!recBusy){autoListen=true;startVoice();}});$("#clearBtn").onclick=clearPad;$("#revealBtn").onclick=doReveal;
 $("#wrongBtn").onclick=()=>judge(false);$("#rightBtn").onclick=()=>judge(true);
 $("#prevBtn").onclick=()=>{if(idx>0){idx--;render();}};
 document.addEventListener("keydown",e=>{if($("#quiz").style.display==="none")return;
