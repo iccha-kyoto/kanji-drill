@@ -9,10 +9,11 @@
   body[data-theme="agent"]{--bg1:#3b3f46;--bg2:#0b0c0f;--accent:#e0312f;--accent2:#ff7b6b;}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;min-height:100%;}
+  body{min-height:100vh;}
   html{background:#0b0c0f;}
   body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));background-attachment:fixed;color:var(--ink);display:flex;justify-content:center;align-items:flex-start;min-height:100%;transition:background .4s;}
   #app{width:100%;max-width:560px;min-height:100vh;display:flex;flex-direction:column;position:relative;}
-  @media (min-width:900px){body.kaki #app{max-width:820px;}}
+  @media (min-width:900px){body.kaki #app{max-width:1000px;}}
   .btn{border:none;border-radius:14px;padding:14px 16px;font-size:18px;font-weight:800;color:#fff;background:linear-gradient(180deg,var(--accent2),var(--accent));box-shadow:0 4px 0 rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.25);cursor:pointer;font-family:inherit;}
   .btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.35);}
   .btn:disabled{opacity:.5;}
@@ -25,46 +26,92 @@
   .btn.on{outline:3px solid var(--gold);outline-offset:1px;}
   #topIcons{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:5;}
   #topIcons button{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;padding:6px 10px;border-radius:10px;cursor:pointer;}
-  #setup{flex:1;display:flex;flex-direction:column;gap:12px;padding:18px 18px 28px;color:#fff;}
-  #setup h1{font-size:24px;margin:2px 0 0;text-align:center;}
-  #setup .lead{text-align:center;color:#e3f1ff;font-size:12px;margin-bottom:2px;}
-  .panel{background:rgba(255,255,255,.96);color:var(--ink);border-radius:16px;padding:13px;box-shadow:0 8px 22px rgba(0,0,0,.22);}
-  .panel h2{margin:2px 0 9px;font-size:14px;color:var(--blue);display:flex;justify-content:space-between;align-items:center;}
-  .daily{display:flex;gap:10px;}.daily .btn{flex:1;}
-  .chips{display:flex;flex-wrap:wrap;gap:7px;}
-  .chip{border:3px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:15px;font-weight:800;color:var(--sub);cursor:pointer;position:relative;}
+  /* メニューは1画面に収める */
+  #setup{flex:1;display:flex;flex-direction:column;gap:8px;padding:10px 12px 10px;color:#fff;}
+  #setupBody .col>button{flex:0 0 auto;}
+  #setup h1{font-size:20px;margin:2px 0 0;text-align:center;}
+  #setupBody{display:grid;grid-template-columns:1fr;gap:8px;}
+  #setupBody .col{display:flex;flex-direction:column;gap:8px;min-width:0;}
+  .panel{background:rgba(255,255,255,.96);color:var(--ink);border-radius:14px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.2);}
+  .panel h2{margin:0 0 6px;font-size:14px;color:var(--blue);display:flex;justify-content:space-between;align-items:center;}
+  .h2r{font-size:10px;color:var(--sub);font-weight:700;}
+  .daily{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .daily .btn{font-size:13px;padding:8px 2px;border-radius:12px;line-height:1.25;}
+  .daily .btn .mini{display:block;font-size:11px;font-weight:700;color:#eef6ff;margin-top:2px;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{border:3px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:14px;font-weight:800;color:var(--sub);cursor:pointer;position:relative;}
   .chip.on{border-color:var(--accent);background:#fff3e6;color:var(--accent);}
   .chip.disabled{opacity:.4;cursor:not-allowed;}
   .chip .st{display:block;font-size:10px;color:#e0a100;letter-spacing:-1px;line-height:1;height:10px;}
-  .secgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
-  .secgrid .chip{justify-self:stretch;text-align:center;padding:7px 0 5px;border-radius:14px;}
-  .mixrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;border-top:1px dashed var(--line);padding-top:10px;}
-  .mixrow .lbl{font-size:12px;color:var(--sub);width:100%;font-weight:800;}
-  /* プレイヤーカード */
-  #player{display:flex;gap:12px;align-items:center;}
-  #pAvatar{font-size:40px;width:58px;height:58px;border-radius:16px;background:linear-gradient(180deg,#fff7d6,#ffe08a);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .dangrid,.secgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .dangrid .chip,.secgrid .chip{text-align:center;padding:3px 0 2px;border-radius:12px;font-size:14px;}
+  .dangrid .chip .st{color:var(--blue);letter-spacing:0;}
+  .mixrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px;align-items:center;}
+  .mixrow .lbl{font-size:11px;color:var(--sub);font-weight:800;margin-right:2px;}
+  .mixrow .chip{padding:3px 10px;font-size:13px;}
+  #player{display:flex;gap:10px;align-items:center;}
+  #pAvatar{font-size:30px;width:46px;height:46px;border-radius:12px;background:linear-gradient(180deg,#fff7d6,#ffe08a);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
   #pInfo{flex:1;min-width:0;}
-  #pRank{font-size:18px;font-weight:900;}
-  #pLv{font-size:12px;color:var(--sub);font-weight:800;}
-  .xpbar{height:10px;background:#e8eef5;border-radius:99px;overflow:hidden;margin-top:5px;}
+  #pRank{font-size:17px;font-weight:900;}
+  #pLv{font-size:11px;color:var(--sub);font-weight:800;}
+  .xpbar{height:8px;background:#e8eef5;border-radius:99px;overflow:hidden;margin-top:4px;}
   .xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--accent));width:0%;transition:width .6s;}
-  #pStreak{text-align:center;font-weight:900;font-size:13px;color:var(--accent);flex:0 0 auto;}
-  #pStreak b{display:block;font-size:24px;}
-  .themes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;}
-  .themes .chip{text-align:center;padding:6px 0;font-size:12px;border-radius:12px;}
-  .themes .chip span{display:block;font-size:22px;}
-  .mission{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #eef2f6;font-size:14px;font-weight:700;}
+  #pStreak{text-align:center;font-weight:900;font-size:11px;color:var(--accent);flex:0 0 auto;}
+  #pStreak b{display:block;font-size:22px;line-height:1;}
+  .themes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
+  .themes .chip{text-align:center;padding:3px 0;font-size:12px;border-radius:10px;}
+  .mission{display:flex;align-items:center;gap:8px;padding:3px 0;border-top:1px solid #eef2f6;font-size:13px;font-weight:700;}
   .mission:first-of-type{border-top:none;}
-  .mission .mk{font-size:18px;width:24px;text-align:center;}
-  .mission .bar{flex:0 0 70px;height:8px;background:#e8eef5;border-radius:99px;overflow:hidden;}
+  .mission .mk{font-size:15px;width:20px;text-align:center;}
+  .mission .bar{flex:0 0 60px;height:7px;background:#e8eef5;border-radius:99px;overflow:hidden;}
   .mission .bar i{display:block;height:100%;background:var(--good);}
-  .mission small{color:var(--sub);width:44px;text-align:right;}
+  .mission small{color:var(--sub);width:40px;text-align:right;}
   .mission.done{color:var(--good);}
-  .league{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;margin:4px 0;}
-  .league span{width:120px;}
+  #startBtn{font-size:20px;padding:12px;}
+  .credit{font-size:9px;color:#cfe0f0;text-align:center;line-height:1.4;}
+  .credit a{color:#cfe0f0;}
+  #leagues{display:flex;flex-direction:column;gap:2px;}
+  .league{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;margin:2px 0;}
+  .league span{width:60px;}
   .league .bar{flex:1;height:8px;background:#e8eef5;border-radius:99px;overflow:hidden;}
   .league .bar i{display:block;height:100%;background:linear-gradient(90deg,#7ec8ff,#2f7fbf);}
   .league em{font-style:normal;width:40px;text-align:right;color:var(--sub);}
+  @media (min-width:820px){body.setup #app{max-width:1060px;}#setupBody{grid-template-columns:1fr 1fr;gap:14px;flex:1;}#setup{padding:14px 20px;}
+    #setupBody .col{gap:12px;}#setupBody .col>.panel{flex:1;display:flex;flex-direction:column;justify-content:center;}
+    #setup h1{font-size:26px;}.panel{padding:14px 16px;}.panel h2{font-size:16px;margin-bottom:10px;}.h2r{font-size:12px;}
+    #pAvatar{font-size:40px;width:62px;height:62px;}#pRank{font-size:22px;}#pLv{font-size:13px;}#pStreak b{font-size:30px;}#pStreak{font-size:13px;}
+    .themes{gap:8px;margin-top:12px;}.themes .chip{font-size:14px;padding:6px 0;}
+    .mission{font-size:16px;padding:7px 0;}.mission .bar{flex-basis:100px;height:9px;}.mission small{font-size:13px;}
+    .daily{gap:8px;}.daily .btn{font-size:16px;padding:14px 4px;}.daily .btn .mini{font-size:13px;}
+    .dangrid,.secgrid{gap:8px;}.dangrid .chip,.secgrid .chip{font-size:18px;padding:7px 0 5px;}.chip .st{font-size:11px;height:12px;}
+    .mixrow{margin-top:10px;padding-top:10px;gap:8px;}.mixrow .chip{font-size:15px;padding:5px 14px;}.mixrow .lbl{font-size:13px;}
+    .chip{font-size:16px;padding:8px 16px;}
+    #startBtn{font-size:26px;padding:18px;}.credit{font-size:10px;}}
+  @media (max-width:819px){
+    #setup{gap:6px;padding:6px 10px 8px;}#setup h1{font-size:16px;margin:0;padding-right:44px;text-align:left;}
+    #setupBody,#setupBody .col{gap:6px;}.panel{padding:8px 10px;border-radius:12px;}.panel h2{margin-bottom:4px;font-size:13px;}
+    #missions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+    .mission{flex-direction:column;align-items:stretch;gap:3px;border:none !important;background:#f3f6fa;border-radius:9px;padding:5px 6px;font-size:11px;line-height:1.25;}
+    .mission .mk{display:none;}.mission .bar{flex:0 0 6px;width:100%;}.mission small{width:auto;font-size:10px;}
+    .mission.done{background:#e6f7ec;}
+    #missions .small{grid-column:1/-1;margin:0;}
+    .themes{margin-top:6px;}.themes .chip{padding:2px 0;}
+    .daily .btn{padding:6px 2px;font-size:12px;}
+    .dangrid .chip .st{display:none;}.dangrid .chip{padding:5px 0;}
+    .secgrid .chip{padding:2px 0 1px;}
+    .mixrow{margin-top:5px;padding-top:5px;flex-wrap:nowrap;}.mixrow .lbl{font-size:10px;}.mixrow .chip{padding:2px 8px;font-size:12px;}
+    #modeChips,#kakiOpts{display:grid !important;grid-template-columns:1fr 1fr;}#kakiOpts[style*="none"]{display:none !important;}
+    #modeChips .chip,#kakiOpts .chip{text-align:center;padding:4px 2px;font-size:13px;}
+    #startBtn{padding:10px;font-size:18px;}
+  }
+  body.revealed #padhint{display:none;}
+  @media (max-width:899px){
+    body.kaki #fbBox .small{display:none;}
+    body.kaki #fbBox ul{margin:0;}
+    body.kaki.revealed #padToolbar{display:none;}
+    body.kaki #ans{font-size:20px;}body.kaki #ansSub{font-size:12px;}
+    body.kaki #side{gap:4px;}
+  }
   /* クイズ */
   #quiz{flex:1;display:none;flex-direction:column;padding:14px 16px 20px;}
   #topbar{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;margin-bottom:8px;gap:8px;padding-right:48px;}
@@ -82,7 +129,24 @@
   #card{background:var(--card);border-radius:20px;padding:20px 16px;box-shadow:0 10px 28px rgba(0,0,0,.28);flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;min-height:300px;position:relative;overflow:hidden;}
   #qlabel{font-size:13px;font-weight:800;color:#fff;background:var(--accent);padding:3px 14px;border-radius:999px;}
   #sentence{font-size:32px;font-weight:800;line-height:1.7;text-align:center;color:var(--ink);}
-  body.kaki #sentence{font-size:26px;}
+  body.kaki #sentence{font-size:24px;line-height:1.4;}
+  body.kaki #card{gap:8px;padding:12px 12px;min-height:0;}
+  body.kaki #masked{display:none !important;}
+  body.kaki #answerbox{min-height:0;}
+  body.kaki #ans{font-size:26px;}
+  body.kaki #ansSub{font-size:14px;}
+  body.kaki #ansHint:empty,body.kaki #voiceStatus:empty{display:none;}
+  #quiz{min-height:100vh;}
+  #side{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;}
+  @media (min-width:900px){
+    body.kaki #card{display:grid;grid-template-columns:1fr 300px;grid-template-rows:auto auto 1fr;column-gap:16px;align-items:start;justify-items:center;}
+    body.kaki #qlabel{grid-column:1/-1;}body.kaki #sentence{grid-column:1/-1;}
+    body.kaki #padwrap{grid-column:1;grid-row:3;}
+    body.kaki #side{grid-column:2;grid-row:3;align-self:center;}
+    body.kaki #fbBox{max-width:none;}
+  }
+  #fbBox{font-size:13px;padding:6px 10px;}
+  #fbBox .h{font-size:15px;}
   #sentence u{text-decoration:none;border-bottom:4px solid var(--accent);padding:0 2px;}
   #padwrap{display:none;flex-direction:column;align-items:center;gap:8px;width:100%;}
   #padToolbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
@@ -161,37 +225,51 @@
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#fff;color:var(--ink);border-radius:14px;padding:10px 16px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.35);transition:transform .35s;z-index:40;max-width:92%;text-align:center;}
   #toast.show{transform:translateX(-50%) translateY(0);}
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:35;}
+  #badgeGrid{grid-template-columns:repeat(4,1fr);gap:6px;}
+  .bcard{padding:6px 3px;font-size:11px;border-radius:10px;}
+  .bcard .i{font-size:24px;}
+  .bcard small{font-size:9px;}
+  #leagues{display:grid;grid-template-columns:1fr 1fr;column-gap:12px;padding:8px 10px;}
+  #leagues>div:first-child,#leagues>div:last-child{grid-column:1/-1;}
+  @media (min-width:820px){#badgeGrid{grid-template-columns:repeat(6,1fr);}body.badgesP #app{max-width:900px;}}
+  .ptop{padding-right:48px;}
+  .bcard small{line-height:1.2;}
+  @media (max-width:819px){.bcard{padding:4px 2px;}.bcard .i{font-size:20px;}.bcard small{font-size:8px;}#badgeGrid{gap:4px;}}
 </style></head>
-<body data-theme="soccer"><div id="app">
+<body data-theme="soccer" class="setup"><div id="app">
   <div id="topIcons"><button id="soundBtn" title="効果音">🔊</button></div>
   <section id="setup">
-    <h1>漢字 暗記カード</h1><div class="lead">声で読み・ペンで書き・毎日つづけてランクアップ</div>
+    <h1>漢字 暗記カード</h1>
     <div id="setupLoading" style="text-align:center;color:#e3f1ff;padding:40px 0;font-size:15px;">読み込み中…</div>
-    <div id="setupBody" style="display:none;flex-direction:column;gap:12px;">
-    <div class="panel">
-      <div id="player"><div id="pAvatar">⚽</div><div id="pInfo"><div id="pRank">—</div><div id="pLv"></div><div class="xpbar"><i id="pXpBar"></i></div></div><div id="pStreak"><b id="pStreakN">0</b>日連続</div></div>
-      <div class="themes" id="themeChips"></div>
-    </div>
-    <div class="panel"><h2><span id="missionTitle">🎯 今日のミッション</span><button class="btn sub sm" id="badgeBtn">🏅 バッジ</button></h2><div id="missions"></div></div>
-    <div class="panel"><h2>📅 毎日の練習</h2>
-      <div class="daily">
-        <button class="btn blue" id="reviewTodayBtn">今日の復習<br><span class="mini" id="dueLbl">0問</span></button>
-        <button class="btn sub" id="weakListBtn"><span id="weakBtnName">苦手リスト</span><br><span class="mini" id="weakLbl">0問</span></button>
+    <div id="setupBody" style="display:none;">
+    <div class="col">
+      <div class="panel">
+        <div id="player"><div id="pAvatar">⚽</div><div id="pInfo"><div id="pRank">—</div><div id="pLv"></div><div class="xpbar"><i id="pXpBar"></i></div></div><div id="pStreak"><b id="pStreakN">0</b>日連続</div></div>
+        <div class="themes" id="themeChips"></div>
       </div>
-      <button class="btn sub" id="calBtn" style="width:100%;margin-top:8px;">📅 学習カレンダー（記録）</button><div class="small" id="todayLog" style="color:var(--sub);margin-top:6px;"></div>
+      <div class="panel"><h2><span id="missionTitle">🎯 今日のミッション</span><span class="h2r">1つ達成で +50XP</span></h2><div id="missions"></div></div>
+      <div class="panel">
+        <div class="daily">
+          <button class="btn blue" id="reviewTodayBtn">今日の復習<span class="mini" id="dueLbl">0問</span></button>
+          <button class="btn sub" id="weakListBtn"><span id="weakBtnName">苦手リスト</span><span class="mini" id="weakLbl">0問</span></button>
+          <button class="btn sub" id="calBtn">📅 記録<span class="mini" id="todayLog">今日 0問</span></button>
+          <button class="btn sub" id="badgeBtn">🏅 バッジ<span class="mini" id="badgeLbl"></span></button>
+        </div>
+      </div>
     </div>
-    <div class="panel"><h2>① だん</h2><div class="chips" id="danChips"></div><div id="leagues" style="margin-top:10px;"></div></div>
-    <div class="panel"><h2>② セクション <span style="font-size:11px;color:var(--sub);">★＝ベスト記録（いまのモード）</span></h2><div class="secgrid" id="secChips"></div>
-      <div class="mixrow" id="mixRow"><div class="lbl">▼ 段まとめ（ランダム出題）</div></div></div>
-    <div class="panel"><h2>③ モード</h2><div class="chips" id="modeChips">
-      <div class="chip on" data-mode="yomi">読み（声で答える🎤）</div>
-      <div class="chip" data-mode="kaki">書き（ペン・指✍️）</div></div>
-      <div class="chips" id="kakiOpts" style="margin-top:8px;display:none;">
-        <div class="chip on" data-kopt="test">📝 テスト（最後に判定）</div>
-        <div class="chip" data-kopt="coach">🧑‍🏫 コーチ（1画ずつチェック）</div></div></div>
-    <button class="btn" id="startBtn" style="font-size:20px;">キックオフ ▶</button>
-    <div class="small" id="dataStats" style="color:#e3f1ff;"></div>
-    <div class="small">書き練習の手本データ: <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener" style="color:#cfe0f0;">KanjiVG</a>（© Ulrich Apel, CC BY-SA 3.0）／読みデータ: <a href="https://www.edrdg.org/wiki/index.php/KANJIDIC_Project" target="_blank" rel="noopener" style="color:#cfe0f0;">KANJIDIC2</a>（© EDRDG, CC BY-SA 4.0）</div>
+    <div class="col">
+      <div class="panel"><h2>① だん <span class="h2r">％＝1回以上正解した語</span></h2><div class="dangrid" id="danChips"></div>
+        <h2 style="margin-top:8px;">② セクション <span class="h2r">★＝ベスト記録</span></h2><div class="secgrid" id="secChips"></div>
+        <div class="mixrow" id="mixRow"><div class="lbl">まとめ</div></div></div>
+      <div class="panel"><h2>③ モード</h2><div class="chips" id="modeChips">
+        <div class="chip on" data-mode="yomi">🎤 読み（声で答える）</div>
+        <div class="chip" data-mode="kaki">✍️ 書き（ペン・指）</div></div>
+        <div class="chips" id="kakiOpts" style="margin-top:6px;display:none;">
+          <div class="chip on" data-kopt="test">📝 テスト（最後に判定）</div>
+          <div class="chip" data-kopt="coach">🧑‍🏫 コーチ（1画ずつ）</div></div></div>
+      <button class="btn" id="startBtn">キックオフ ▶</button>
+      <div class="credit"><span id="dataStats"></span>　手本: <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener">KanjiVG</a>（© Ulrich Apel, CC BY-SA 3.0）／読み: <a href="https://www.edrdg.org/wiki/index.php/KANJIDIC_Project" target="_blank" rel="noopener">KANJIDIC2</a>（© EDRDG, CC BY-SA 4.0）</div>
+    </div>
     </div>
   </section>
   <section id="quiz">
@@ -208,12 +286,14 @@
           <button class="btn sub sm" id="penOnlyBtn" type="button" title="ペンを使うとき、手のひらが画面にふれても線が出ないようにします">🖊 ペンだけ</button>
         </div>
         <div id="padGrid"></div>
-        <div id="padhint">マスに漢字を書こう（ペン・指・マウス）。ペンの消しゴム側でなぞると1画消せます</div>
-        <div id="fbBox"></div>
+        <div id="padhint">ペン・指・マウスで書けます（ペンの消しゴム側で1画消せます）</div>
       </div>
+      <div id="side">
       <div id="answerbox"><div class="masked" id="masked">◼◼◼</div><div id="ans" style="display:none;"></div><div id="ansSub" style="display:none;"></div></div>
+      <div id="fbBox"></div>
       <div id="voiceStatus"></div>
       <div id="ansHint"></div>
+      </div>
       <div id="flash"></div>
     </div>
     <div id="controls">
@@ -250,6 +330,7 @@
   <section id="badges" class="page">
     <div class="ptop"><div class="t">🏅 バッジコレクション</div><button class="btn sub sm" id="badgeBack">メニュー</button></div>
     <div class="mini" id="badgeLead"></div>
+    <div class="panel" id="leagues"></div>
     <div id="badgeGrid"></div>
   </section>
 </div>
@@ -268,25 +349,25 @@ const THEMES={
     ok:["ゴール！！","ナイスシュート！","ゴラッソ！","決めた！"],ng:["ポストに当たった…","キーパーに止められた"],
     combo:{3:"ハットトリック！🎩",5:"ゴールラッシュ！",10:"止められない！🔥",20:"伝説のストライカー！"},
     ranks:["ベンチ","スタメン","レギュラー","エース","キャプテン","日本代表","海外クラブ","世界最優秀選手"],
-    weak:"苦手ディフェンダー",weakLead:"あなたのシュートを止めた相手。2回つづけて決めると突破（リストから消えます）。",
+    weak:"苦手ディフェンダー",weakShort:"苦手DF",weakLead:"あなたのシュートを止めた相手。2回つづけて決めると突破（リストから消えます）。",
     me:"YOU",rival:"ライバル",win:"勝利！",lose:"惜敗…",draw:"引き分け",mission:"⚽ 今日のトレーニング"},
   basket:{name:"バスケ",icon:"🏀",start:"ティップオフ ▶",session:"試合",
     ok:["ナイスショット！","スウィッシュ！","ダンク！","バスケットカウント！"],ng:["リングに嫌われた…","ブロックされた"],
     combo:{3:"連続得点！",5:"ON FIRE 🔥",10:"止まらない！",20:"MVP級！"},
     ranks:["ルーキー","ベンチ","シックスマン","スタメン","エース","キャプテン","MVP","殿堂入り"],
-    weak:"苦手ディフェンス",weakLead:"ブロックされた語。2回つづけて決めると突破（リストから消えます）。",
+    weak:"苦手ディフェンス",weakShort:"苦手DF",weakLead:"ブロックされた語。2回つづけて決めると突破（リストから消えます）。",
     me:"YOU",rival:"ライバル",win:"勝利！",lose:"惜敗…",draw:"延長戦へ…",mission:"🏀 今日の練習メニュー"},
   detective:{name:"探偵",icon:"🔍",start:"捜査開始 ▶",session:"事件",
     ok:["謎が解けた！","推理的中！","真相解明！","見破った！"],ng:["推理ミス…","証拠が足りない…"],
     combo:{3:"冴えてる！",5:"名推理の連続！",10:"迷宮なし！",20:"世紀の名探偵！"},
     ranks:["見習い探偵","少年探偵","探偵","敏腕探偵","名探偵","警察も頼る名探偵","伝説の名探偵","世紀の名探偵"],
-    weak:"未解決事件ファイル",weakLead:"まだ解けていない事件。2回つづけて正解すると解決（ファイルから消えます）。",
+    weak:"未解決事件ファイル",weakShort:"未解決事件",weakLead:"まだ解けていない事件。2回つづけて正解すると解決（ファイルから消えます）。",
     me:"解決",rival:"迷宮",win:"事件解決！",lose:"捜査続行…",draw:"捜査続行…",mission:"🔍 今日の依頼"},
   agent:{name:"スパイ",icon:"🕶️",start:"作戦開始 ▶",session:"ミッション",
     ok:["任務成功","ターゲット確保","潜入成功","完璧だ"],ng:["正体がバレそうだ…","作戦失敗…"],
     combo:{3:"作戦続行！",5:"完璧な連携！",10:"無敵のエージェント！",20:"伝説の工作員！"},
     ranks:["訓練生","見習い工作員","工作員","エージェント","特殊班","極秘チーム","司令官","伝説のエージェント"],
-    weak:"要注意ターゲット",weakLead:"まだ確保できていないターゲット。2回つづけて正解すると確保（リストから消えます）。",
+    weak:"要注意ターゲット",weakShort:"要注意",weakLead:"まだ確保できていないターゲット。2回つづけて正解すると確保（リストから消えます）。",
     me:"成功",rival:"失敗",win:"ミッション完了！",lose:"再出撃せよ",draw:"再出撃せよ",mission:"🕶️ 今日の指令"}
 };
 function TH(){return THEMES[store.g.theme]||THEMES.soccer;}
@@ -346,7 +427,7 @@ function renderMissions(){const ms=todayMissions();$("#missionTitle").textConten
   ms.forEach(m=>{const v=Math.min(store.g.day[m.key]||0,m.goal),done=!!store.g.day.claimed[m.id];
     html+='<div class="mission'+(done?' done':'')+'"><span class="mk">'+(done?"✅":"⬜")+'</span><span style="flex:1;">'+m.txt+'</span><div class="bar"><i style="width:'+(v/m.goal*100)+'%"></i></div><small>'+v+'/'+m.goal+'</small></div>';});
   const all=ms.length&&ms.every(m=>store.g.day.claimed[m.id]);
-  html+='<div class="small" style="color:var(--sub);">'+(all?"🌟 今日のミッション全部クリア！すごい！":"1つ達成ごとに +50XP")+'</div>';
+  if(all)html+='<div class="small" style="color:var(--good);margin-top:2px;">🌟 今日のミッション全部クリア！すごい！</div>';
   $("#missions").innerHTML=html;}
 
 /* ----- バッジ ----- */
@@ -369,7 +450,7 @@ const BADGES=[
 ].concat(DANS.map((d,i)=>({id:"dan"+i,i:"🎖️",n:d+" 制覇",d:d+"の全語を1回以上正解",f:()=>danMastery(d)>=1})));
 function danMastery(d){const its=ALL.filter(it=>it.dan===d);if(!its.length)return 0;let n=0;its.forEach(it=>{const s=store.stats[it.id];if(s&&s.r>0)n++;});return n/its.length;}
 function checkBadges(){const got=[];BADGES.forEach(b=>{if(!store.g.badges[b.id]&&b.f(store.g.tot)){store.g.badges[b.id]=today();got.push(b);}});if(got.length)persist();return got;}
-function renderBadges(){const n=Object.keys(store.g.badges).length;$("#badgeLead").textContent=n+" / "+BADGES.length+" 個ゲット";
+function renderBadges(){renderLeagues();const n=Object.keys(store.g.badges).length;$("#badgeLead").textContent=n+" / "+BADGES.length+" 個ゲット";
   $("#badgeGrid").innerHTML=BADGES.map(b=>{const h=store.g.badges[b.id];return '<div class="bcard'+(h?'':' lock')+'"><span class="i">'+b.i+'</span>'+b.n+'<small>'+(h?h.replace(/-/g,"/"):b.d)+'</small></div>';}).join("");}
 
 /* ----- XP 演出 ----- */
@@ -544,8 +625,8 @@ function makeCell(ch){
 function isWritable(c){return !!(KANJIVG&&KANJIVG[c])&&!/[ぁ-ん]/.test(c);}
 function buildPadCells(it){
   const chars=Array.from(it.t);const nW=chars.filter(isWritable).length||1;
-  const avail=Math.min($("#card").clientWidth-36,(document.body.classList.contains("kaki")&&innerWidth>=900)?780:520);
-  PAD=Math.max(110,Math.min(230,Math.floor((avail-(nW-1)*6-(chars.length-nW)*34)/nW)));
+  const wide=document.body.classList.contains("kaki")&&innerWidth>=900;const avail=wide?$("#card").clientWidth-340:Math.min($("#card").clientWidth-36,520);
+  PAD=Math.max(100,Math.min(wide?260:230,innerHeight-(wide?400:560),Math.floor((avail-(nW-1)*6-(chars.length-nW)*34)/nW)));
   const grid=$("#padGrid");grid.innerHTML="";padCells=[];
   chars.forEach(ch=>{if(isWritable(ch)){const c=makeCell(ch);padCells.push(c);grid.appendChild(c.wrap);}else{const s=document.createElement("span");s.className="okuri";s.textContent=ch;grid.appendChild(s);}});
   updatePadFeatureButtons();resetFeedback();}
@@ -667,30 +748,31 @@ function buildSecs(){const keep=selKind==="sec"&&secHas(setDan,selSec)?selSec:nu
 $("#modeChips").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;$("#modeChips").querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');setMode=c.dataset.mode;$("#kakiOpts").style.display=setMode==="kaki"?"flex":"none";buildSecs();});
 $("#kakiOpts").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;$("#kakiOpts").querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');kakiOpt=c.dataset.kopt;store.g.kopt=kakiOpt;persist();});
 function syncKopt(){$("#kakiOpts").querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.kopt===kakiOpt));}
-function show(id){["#setup","#quiz","#done","#weak","#cal","#badges"].forEach(s=>$(s).style.display="none");$(id).style.display="flex";document.body.classList.toggle("kaki",id==="#quiz"&&setMode==="kaki");if(id==="#setup")refreshDaily();window.scrollTo(0,0);}
+function show(id){["#setup","#quiz","#done","#weak","#cal","#badges"].forEach(s=>$(s).style.display="none");$(id).style.display="flex";document.body.classList.toggle("kaki",id==="#quiz"&&setMode==="kaki");document.body.classList.toggle("setup",id==="#setup");document.body.classList.toggle("badgesP",id==="#badges");if(id==="#setup")refreshDaily();window.scrollTo(0,0);}
 function renderThemeChips(){$("#themeChips").innerHTML=Object.keys(THEMES).map(k=>'<div class="chip'+(store.g.theme===k?' on':'')+'" data-th="'+k+'"><span>'+THEMES[k].icon+'</span>'+THEMES[k].name+'</div>').join("");}
 $("#themeChips").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;store.g.theme=c.dataset.th;persist();applyTheme();refreshDaily();});
-function applyTheme(){const t=TH();document.body.dataset.theme=store.g.theme;$("#pAvatar").textContent=t.icon;$("#startBtn").textContent=t.start;$("#weakBtnName").textContent=t.weak;renderThemeChips();}
+function applyTheme(){const t=TH();document.body.dataset.theme=store.g.theme;$("#pAvatar").textContent=t.icon;$("#startBtn").textContent=t.start;$("#weakBtnName").textContent=t.weakShort||t.weak;renderThemeChips();}
 function renderPlayer(){const L=lvInfo(store.g.xp);$("#pRank").textContent=rankName(L.lv);$("#pLv").textContent="Lv."+L.lv+"　"+L.cur+" / "+L.need+" XP";$("#pXpBar").style.width=(L.cur/L.need*100)+"%";$("#pStreakN").textContent=streakDays();}
-function renderLeagues(){$("#leagues").innerHTML=DANS.filter(danHas).map(d=>{const v=danMastery(d);return '<div class="league"><span>'+d+'</span><div class="bar"><i style="width:'+(v*100)+'%"></i></div><em>'+Math.round(v*100)+'%</em></div>';}).join("")+'<div class="small" style="color:var(--sub);text-align:left;">バー＝その段で1回以上正解した語の割合（100%で「制覇」バッジ）</div>';}
-function refreshDaily(){if(!DATA)return;$("#dueLbl").textContent=dueItems().length+"問";$("#weakLbl").textContent=weakItems().length+"問";const c=store.log[today()]||0;$("#todayLog").textContent=c?("今日やった: "+c+"問"):"";
+function renderLeagues(){[...danWrap.children].forEach(c=>{const st=c.querySelector(".st");if(st&&danHas(c.dataset.dan))st.textContent=Math.round(danMastery(c.dataset.dan)*100)+"%";});
+  $("#leagues").innerHTML='<div style="font-weight:900;color:var(--blue);font-size:14px;">段の制覇率</div>'+DANS.filter(danHas).map(d=>{const v=danMastery(d);return '<div class="league"><span>'+d+'</span><div class="bar"><i style="width:'+(v*100)+'%"></i></div><em>'+Math.round(v*100)+'%</em></div>';}).join("")+'<div class="small" style="color:var(--sub);text-align:left;">1回以上正解した語の割合（100%で「制覇」バッジ）</div>';}
+function refreshDaily(){if(!DATA)return;$("#dueLbl").textContent=dueItems().length+"問";$("#weakLbl").textContent=weakItems().length+"問";const c=store.log[today()]||0;$("#todayLog").textContent="今日 "+c+"問";$("#badgeLbl").textContent=Object.keys(store.g.badges).length+"/"+BADGES.length;
   renderPlayer();renderMissions();renderLeagues();buildSecs();}
 function onDataReady(){
   buildIndex();
-  DANS.forEach(d=>{const ok=danHas(d);const c=document.createElement("div");c.className="chip"+(!ok?" disabled":"");c.textContent=d;c.dataset.dan=d;if(ok)c.onclick=()=>{danWrap.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');setDan=d;selKind="sec";selSec=null;buildSecs();};danWrap.appendChild(c);});
+  DANS.forEach(d=>{const ok=danHas(d);const c=document.createElement("div");c.className="chip"+(!ok?" disabled":"");c.innerHTML=d+'<span class="st"></span>';c.dataset.dan=d;if(ok)c.onclick=()=>{danWrap.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');setDan=d;selKind="sec";selSec=null;buildSecs();};danWrap.appendChild(c);});
   setDan=DANS.find(danHas);[...danWrap.children].forEach(c=>{if(c.dataset.dan===setDan)c.classList.add('on');});
   applyTheme();syncPenBtn();syncKopt();
   showCollectionStats();
   refreshDaily();checkBadges();
   var lo=$("#setupLoading"),sb=$("#setupBody");
   if(lo)lo.style.display="none";
-  if(sb)sb.style.display="flex";
+  if(sb)sb.style.display="grid";
 }
 function showCollectionStats(){
   var total=ALL.length;
   var parts=DANS.filter(danHas).map(function(d){var n=0;Object.keys(DATA[d]).forEach(function(s){n+=DATA[d][s].length;});return d+n;});
   var el=$("#dataStats");
-  if(el)el.textContent="収録: "+total.toLocaleString()+"語（"+parts.join("・")+"）";
+  if(el)el.textContent="収録 "+total.toLocaleString()+"語";
 }
 fetch('data.json').then(function(r){if(!r.ok)throw new Error('load failed: '+r.status);return r.json();}).then(function(d){DATA=d;onDataReady();}).catch(function(e){var lo=$("#setupLoading");if(lo)lo.textContent="読み込みに失敗しました。ページを再読み込みしてください。";});
 
@@ -715,7 +797,7 @@ function renderBoard(){const t=TH();const w=sessionWrong.length,c=sessCorrect;
   $("#comboBox").textContent=combo>=2?("🔥 "+combo+"コンボ"):"";}
 function flashMsg(txt,good){const f=$("#flash");f.textContent=txt;f.style.color=good?"#1fb35a":"#e23b3b";f.classList.remove("show");void f.offsetWidth;f.classList.add("show");}
 function render(){
-  revealed=false;answered=false;usedHelp=false;const it=items[idx];
+  revealed=false;answered=false;usedHelp=false;const it=items[idx];document.body.classList.remove("revealed");
   $("#qhead").textContent=quizTitle+"  "+(idx+1)+" / "+items.length;
   $("#prog").style.width=(idx/items.length*100)+"%";renderBoard();
   $("#qlabel").textContent=setMode==="yomi"?"読み 🎤":"書き ✍️";
@@ -730,10 +812,10 @@ function render(){
   $("#judgeRow").style.display="none";
   qStart=Date.now();
 }
-function doReveal(silent){revealed=true;autoListen=false;if(rec)try{rec.abort();}catch(e){}const it=items[idx];$("#masked").style.display="none";
+function doReveal(silent){revealed=true;document.body.classList.add("revealed");autoListen=false;if(rec)try{rec.abort();}catch(e){}const it=items[idx];$("#masked").style.display="none";
   $("#ans").style.display="block";$("#ans").textContent=setMode==="yomi"?it.y:it.t;
   $("#ansSub").style.display="block";$("#ansSub").textContent=setMode==="yomi"?("（"+it.t+"）"+(it.a?"　"+it.a.join("・")+" とも読む":"")):("（"+it.y+"）");
-  $("#clearBtn").style.display="none";$("#checkBtn").style.display="none";$("#revealBtn").style.display="none";
+  $("#clearBtn").style.display="none";$("#checkBtn").style.display="none";$("#revealBtn").style.display="none";$("#ansHint").textContent="";
   if(!silent)$("#judgeRow").style.display="flex";
   if(setMode==="yomi")setTimeout(()=>speakJa(it.y),silent?250:50);}
 function checkKaki(){if(revealed||answered)return;if(!padCells.some(c=>c.strokes.length)){toast("まずマスに書いてみよう");return;}
