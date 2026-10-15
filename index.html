@@ -10,8 +10,18 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;min-height:100%;}
   body{min-height:100vh;}
-  html{background:#0b0c0f;}
-  body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));background-attachment:fixed;color:var(--ink);display:flex;justify-content:center;align-items:flex-start;min-height:100%;transition:background .4s;}
+  html{background:var(--bg2);}
+  #bgPhoto{position:fixed;inset:-3%;z-index:-1;background-color:var(--bg2);background-size:cover;background-position:center;animation:kb 40s ease-in-out infinite alternate;transition:background-image .5s;}
+  #bgPhoto::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.30),rgba(0,0,0,.62));}
+  body[data-theme="soccer"] #bgPhoto{background-image:url(img/soccer.jpg);background-position:center 60%;}
+  body[data-theme="basket"] #bgPhoto{background-image:url(img/basket.jpg);}
+  body[data-theme="detective"] #bgPhoto{background-image:url(img/detective.jpg);}
+  body[data-theme="agent"] #bgPhoto{background-image:url(img/agent.jpg);}
+  body[data-theme="detective"] #bgPhoto::after,body[data-theme="agent"] #bgPhoto::after{background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.40));}
+  body[data-theme="detective"] #bgPhoto{filter:brightness(1.35);}
+  @keyframes kb{from{transform:scale(1)}to{transform:scale(1.07) translate(-1%,-1%)}}
+  @media (prefers-reduced-motion:reduce){#bgPhoto{animation:none;}}
+  body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:transparent;color:var(--ink);display:flex;justify-content:center;align-items:flex-start;min-height:100%;transition:background .4s;}
   #app{width:100%;max-width:560px;min-height:100vh;display:flex;flex-direction:column;position:relative;}
   @media (min-width:900px){body.kaki #app{max-width:1000px;}}
   .btn{border:none;border-radius:14px;padding:14px 16px;font-size:18px;font-weight:800;color:#fff;background:linear-gradient(180deg,var(--accent2),var(--accent));box-shadow:0 4px 0 rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.25);cursor:pointer;font-family:inherit;}
@@ -88,7 +98,7 @@
     .chip{font-size:16px;padding:8px 16px;}
     #startBtn{font-size:26px;padding:18px;}.credit{font-size:10px;}}
   @media (max-width:819px){
-    #setup{gap:6px;padding:6px 10px 8px;}#setup h1{font-size:16px;margin:0;padding-right:44px;text-align:left;}
+    #setup{gap:6px;padding:6px 10px 8px;}#setup h1{font-size:16px;margin:0;padding-right:92px;text-align:left;}
     #setupBody,#setupBody .col{gap:6px;}.panel{padding:8px 10px;border-radius:12px;}.panel h2{margin-bottom:4px;font-size:13px;}
     #missions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
     .mission{flex-direction:column;align-items:stretch;gap:3px;border:none !important;background:#f3f6fa;border-radius:9px;padding:5px 6px;font-size:11px;line-height:1.25;}
@@ -114,7 +124,7 @@
   }
   /* クイズ */
   #quiz{flex:1;display:none;flex-direction:column;padding:14px 16px 20px;}
-  #topbar{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;margin-bottom:8px;gap:8px;padding-right:48px;}
+  #topbar{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;margin-bottom:8px;gap:8px;padding-right:96px;}
   #topbar .info{font-size:14px;}
   #scoreboard{display:flex;justify-content:center;align-items:center;gap:10px;background:rgba(0,0,0,.35);color:#fff;border-radius:12px;padding:6px 10px;margin-bottom:8px;font-weight:900;}
   #scoreboard .sc{font-size:26px;font-variant-numeric:tabular-nums;min-width:34px;text-align:center;}
@@ -232,12 +242,12 @@
   #leagues{display:grid;grid-template-columns:1fr 1fr;column-gap:12px;padding:8px 10px;}
   #leagues>div:first-child,#leagues>div:last-child{grid-column:1/-1;}
   @media (min-width:820px){#badgeGrid{grid-template-columns:repeat(6,1fr);}body.badgesP #app{max-width:900px;}}
-  .ptop{padding-right:48px;}
+  .ptop{padding-right:96px;}
   .bcard small{line-height:1.2;}
   @media (max-width:819px){.bcard{padding:4px 2px;}.bcard .i{font-size:20px;}.bcard small{font-size:8px;}#badgeGrid{gap:4px;}}
 </style></head>
-<body data-theme="soccer" class="setup"><div id="app">
-  <div id="topIcons"><button id="soundBtn" title="効果音">🔊</button></div>
+<body data-theme="soccer" class="setup"><div id="bgPhoto"></div><div id="app">
+  <div id="topIcons"><button id="bgmBtn" title="BGM">🎵</button><button id="soundBtn" title="効果音">🔊</button></div>
   <section id="setup">
     <h1>漢字 暗記カード</h1>
     <div id="setupLoading" style="text-align:center;color:#e3f1ff;padding:40px 0;font-size:15px;">読み込み中…</div>
@@ -268,7 +278,7 @@
           <div class="chip on" data-kopt="test">📝 テスト（最後に判定）</div>
           <div class="chip" data-kopt="coach">🧑‍🏫 コーチ（1画ずつ）</div></div></div>
       <button class="btn" id="startBtn">キックオフ ▶</button>
-      <div class="credit"><span id="dataStats"></span>　手本: <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener">KanjiVG</a>（© Ulrich Apel, CC BY-SA 3.0）／読み: <a href="https://www.edrdg.org/wiki/index.php/KANJIDIC_Project" target="_blank" rel="noopener">KANJIDIC2</a>（© EDRDG, CC BY-SA 4.0）</div>
+      <div class="credit"><span id="dataStats"></span>　手本: <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener">KanjiVG</a>（© Ulrich Apel, CC BY-SA 3.0）／読み: <a href="https://www.edrdg.org/wiki/index.php/KANJIDIC_Project" target="_blank" rel="noopener">KANJIDIC2</a>（© EDRDG, CC BY-SA 4.0）／写真: <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>（C. Kursikowski, P. Schöpflin, S. Nasir, S. Batagov）／音楽・効果音: <a href="https://opengameart.org" target="_blank" rel="noopener">OpenGameArt</a>・<a href="https://kenney.nl" target="_blank" rel="noopener">Kenney</a>（CC0）</div>
     </div>
     </div>
   </section>
@@ -422,7 +432,7 @@ function todayMissions(){const t=today();if(store.g.day.date!==t){store.g.day={d
   while(out.length<3&&p.length){const i=h%p.length;h=Math.imul(h^(h>>>13),2654435761)>>>0;const m=p.splice(i,1)[0];if(keys[m.key])continue;keys[m.key]=1;out.push(m);}
   return out;}
 function dayBump(key,v){const d=store.g.day;if(d.date!==today())todayMissions();if(key==="maxCombo")d.maxCombo=Math.max(d.maxCombo||0,v);else d[key]=(d[key]||0)+(v||1);
-  todayMissions().forEach(m=>{if(!store.g.day.claimed[m.id]&&(store.g.day[m.key]||0)>=m.goal){store.g.day.claimed[m.id]=1;addXp(50,true);toast("🎯 ミッション達成！「"+m.txt+"」 +50XP");sessGain.missions++;}});persist();}
+  todayMissions().forEach(m=>{if(!store.g.day.claimed[m.id]&&(store.g.day[m.key]||0)>=m.goal){store.g.day.claimed[m.id]=1;addXp(50,true);reward();toast("🎯 ミッション達成！「"+m.txt+"」 +50XP");sessGain.missions++;}});persist();}
 function renderMissions(){const ms=todayMissions();$("#missionTitle").textContent=TH().mission;let html="";
   ms.forEach(m=>{const v=Math.min(store.g.day[m.key]||0,m.goal),done=!!store.g.day.claimed[m.id];
     html+='<div class="mission'+(done?' done':'')+'"><span class="mk">'+(done?"✅":"⬜")+'</span><span style="flex:1;">'+m.txt+'</span><div class="bar"><i style="width:'+(v/m.goal*100)+'%"></i></div><small>'+v+'/'+m.goal+'</small></div>';});
@@ -468,13 +478,40 @@ function confetti(){const cv=$("#confetti"),cx=cv.getContext("2d");cv.width=inne
 let actx=null,soundOn=true;
 function ac(){if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();return actx;}
 function tone(f,t0,dur,type,vol){const o=ac().createOscillator(),g=ac().createGain();o.type=type;o.frequency.value=f;o.connect(g);g.connect(ac().destination);const t=ac().currentTime+t0;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.start(t);o.stop(t+dur+0.02);}
-function chime(){if(!soundOn)return;try{[[880,0],[1175,.09],[1568,.18]].forEach(([f,t])=>tone(f,t,.22,"triangle",.25));}catch(e){}}
-function comboChime(n){if(!soundOn)return;try{const b=660*Math.pow(1.06,Math.min(n,12));[[b,0],[b*1.26,.08],[b*1.5,.16],[b*2,.24]].forEach(([f,t])=>tone(f,t,.2,"square",.12));}catch(e){}}
-function fanfare(){if(!soundOn)return;try{[[523,0],[659,.12],[784,.24],[1047,.36],[784,.5],[1047,.62]].forEach(([f,t])=>tone(f,t,.25,"triangle",.28));}catch(e){}}
-function buzz(){if(!soundOn)return;try{tone(196,0,.25,"sawtooth",.18);}catch(e){}}
+/* 効果音（Kenney Music Jingles, CC0）：テーマごとに楽器を変える。読み込み前は合成音で代用 */
+const SFX_KIT={soccer:"nes",basket:"nes",detective:"pizzi",agent:"sax"};
+const sfxBuf={},sfxLoading={};
+function sfxUrl(name){return "snd/"+(["ok","combo","ng","lose"].includes(name)?name+"_"+(SFX_KIT[store.g.theme]||"nes"):name)+".mp3";}
+function loadBuf(url){if(sfxBuf[url]||sfxLoading[url])return;sfxLoading[url]=1;fetch(url).then(r=>r.arrayBuffer()).then(b=>new Promise((ok,ng)=>ac().decodeAudioData(b,ok,ng))).then(buf=>{sfxBuf[url]=buf;}).catch(()=>{sfxLoading[url]=0;});}
+function preloadSfx(){["ok","combo","ng","lose","levelup","reward"].forEach(n=>loadBuf(sfxUrl(n)));}
+function playSfx(name,vol){const b=sfxBuf[sfxUrl(name)];if(!b){loadBuf(sfxUrl(name));return false;}try{const src=ac().createBufferSource(),g=ac().createGain();src.buffer=b;g.gain.value=vol||0.7;src.connect(g);g.connect(ac().destination);src.start();duckBgm(b.duration);}catch(e){return false;}return true;}
+function chime(){if(!soundOn)return;if(playSfx("ok"))return;try{[[880,0],[1175,.09],[1568,.18]].forEach(([f,t])=>tone(f,t,.22,"triangle",.25));}catch(e){}}
+function reward(){if(!soundOn)return;if(!playSfx("reward"))chime();}
+function loseJingle(){if(!soundOn)return;if(!playSfx("lose",.6))buzz();}
+function comboChime(n){if(!soundOn)return;if(playSfx("combo"))return;try{const b=660*Math.pow(1.06,Math.min(n,12));[[b,0],[b*1.26,.08],[b*1.5,.16],[b*2,.24]].forEach(([f,t])=>tone(f,t,.2,"square",.12));}catch(e){}}
+function fanfare(){if(!soundOn)return;if(playSfx("levelup"))return;try{[[523,0],[659,.12],[784,.24],[1047,.36],[784,.5],[1047,.62]].forEach(([f,t])=>tone(f,t,.25,"triangle",.28));}catch(e){}}
+function buzz(){if(!soundOn)return;if(playSfx("ng",.55))return;try{tone(196,0,.25,"sawtooth",.18);}catch(e){}}
 function tick(){if(!soundOn)return;try{tone(1400,0,.05,"square",.06);}catch(e){}}
 function speakJa(t){if(!soundOn||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=.95;speechSynthesis.speak(u);}catch(e){}}
-$("#soundBtn").onclick=()=>{soundOn=!soundOn;$("#soundBtn").textContent=soundOn?"🔊":"🔇";if(soundOn)try{ac().resume();}catch(e){}};
+soundOn=store.g.sound!==false;$("#soundBtn").textContent=soundOn?"🔊":"🔇";
+$("#soundBtn").onclick=()=>{soundOn=!soundOn;store.g.sound=soundOn;persist();$("#soundBtn").textContent=soundOn?"🔊":"🔇";if(soundOn){try{ac().resume();}catch(e){}preloadSfx();}};
+
+/* BGM（OpenGameArt, CC0）：メニューは元気な曲、書きの練習中は落ち着いた曲。
+   読みの練習中はマイクが音楽をひろわないよう止める */
+const BGM={menu:{url:"snd/bgm_menu.mp3",vol:.16},study:{url:"snd/bgm_study.mp3",vol:.11}};
+let bgmOn=store.g.bgm!==false,bgmWant=null,bgmCur=null,bgmSrc=null,bgmGain=null,audioUnlocked=false;
+function syncBgmBtn(){$("#bgmBtn").textContent=bgmOn?"🎵":"🔕";$("#bgmBtn").style.opacity=bgmOn?1:.6;}
+function setBgm(name){bgmWant=name;applyBgm();}
+function applyBgm(){if(!audioUnlocked)return;const want=bgmOn?bgmWant:null;if(want===bgmCur)return;
+  if(bgmSrc){const s0=bgmSrc,g0=bgmGain;try{g0.gain.setTargetAtTime(0,ac().currentTime,.25);setTimeout(()=>{try{s0.stop();}catch(e){}},900);}catch(e){}bgmSrc=null;bgmGain=null;}
+  bgmCur=want;if(!want)return;const t=BGM[want],b=sfxBuf[t.url];
+  if(!b){loadBuf(t.url);bgmCur=null;setTimeout(applyBgm,700);return;}
+  try{const src=ac().createBufferSource(),g=ac().createGain();src.buffer=b;src.loop=true;g.gain.value=0;src.connect(g);g.connect(ac().destination);src.start();g.gain.setTargetAtTime(t.vol,ac().currentTime,.4);bgmSrc=src;bgmGain=g;}catch(e){}}
+function duckBgm(sec){if(!bgmGain)return;try{const now=ac().currentTime,v=BGM[bgmCur].vol;bgmGain.gain.cancelScheduledValues(now);bgmGain.gain.setTargetAtTime(v*.3,now,.03);bgmGain.gain.setTargetAtTime(v,now+sec,.3);}catch(e){}}
+$("#bgmBtn").onclick=()=>{bgmOn=!bgmOn;store.g.bgm=bgmOn;persist();syncBgmBtn();unlockAudio();applyBgm();};
+function unlockAudio(){if(audioUnlocked)return;audioUnlocked=true;try{ac().resume();}catch(e){}preloadSfx();Object.values(BGM).forEach(t=>loadBuf(t.url));applyBgm();}
+document.addEventListener("pointerdown",unlockAudio,{capture:true});document.addEventListener("keydown",unlockAudio,{capture:true});
+syncBgmBtn();bgmWant="menu";
 
 /* ===== 読みの判定 =====
    音声認識は「漢字まじり」で返ってくるので（例: かんせい→完成）、
@@ -748,9 +785,9 @@ function buildSecs(){const keep=selKind==="sec"&&secHas(setDan,selSec)?selSec:nu
 $("#modeChips").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;$("#modeChips").querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');setMode=c.dataset.mode;$("#kakiOpts").style.display=setMode==="kaki"?"flex":"none";buildSecs();});
 $("#kakiOpts").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;$("#kakiOpts").querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');kakiOpt=c.dataset.kopt;store.g.kopt=kakiOpt;persist();});
 function syncKopt(){$("#kakiOpts").querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.kopt===kakiOpt));}
-function show(id){["#setup","#quiz","#done","#weak","#cal","#badges"].forEach(s=>$(s).style.display="none");$(id).style.display="flex";document.body.classList.toggle("kaki",id==="#quiz"&&setMode==="kaki");document.body.classList.toggle("setup",id==="#setup");document.body.classList.toggle("badgesP",id==="#badges");if(id==="#setup")refreshDaily();window.scrollTo(0,0);}
+function show(id){setBgm(id==="#quiz"?(setMode==="kaki"?"study":null):"menu");["#setup","#quiz","#done","#weak","#cal","#badges"].forEach(s=>$(s).style.display="none");$(id).style.display="flex";document.body.classList.toggle("kaki",id==="#quiz"&&setMode==="kaki");document.body.classList.toggle("setup",id==="#setup");document.body.classList.toggle("badgesP",id==="#badges");if(id==="#setup")refreshDaily();window.scrollTo(0,0);}
 function renderThemeChips(){$("#themeChips").innerHTML=Object.keys(THEMES).map(k=>'<div class="chip'+(store.g.theme===k?' on':'')+'" data-th="'+k+'"><span>'+THEMES[k].icon+'</span>'+THEMES[k].name+'</div>').join("");}
-$("#themeChips").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;store.g.theme=c.dataset.th;persist();applyTheme();refreshDaily();});
+$("#themeChips").addEventListener("click",e=>{const c=e.target.closest('.chip');if(!c)return;store.g.theme=c.dataset.th;persist();applyTheme();refreshDaily();if(audioUnlocked){preloadSfx();setTimeout(()=>chime(),300);}});
 function applyTheme(){const t=TH();document.body.dataset.theme=store.g.theme;$("#pAvatar").textContent=t.icon;$("#startBtn").textContent=t.start;$("#weakBtnName").textContent=t.weakShort||t.weak;renderThemeChips();}
 function renderPlayer(){const L=lvInfo(store.g.xp);$("#pRank").textContent=rankName(L.lv);$("#pLv").textContent="Lv."+L.lv+"　"+L.cur+" / "+L.need+" XP";$("#pXpBar").style.width=(L.cur/L.need*100)+"%";$("#pStreakN").textContent=streakDays();}
 function renderLeagues(){[...danWrap.children].forEach(c=>{const st=c.querySelector(".st");if(st&&danHas(c.dataset.dan))st.textContent=Math.round(danMastery(c.dataset.dan)*100)+"%";});
@@ -867,7 +904,7 @@ function finish(){const t=TH();const w=sessionWrong.length,n=items.length,c=n-w,
   lastWrong=sessionWrong.slice();
   if(w>0){$("#reviewBtn").style.display="block";$("#reviewBtn").textContent="❌ まちがえた "+w+"問をやり直す";}
   else{$("#reviewBtn").style.display="none";}
-  show("#done");if(stars>=2||sessGain.lvUp){confetti();fanfare();}}
+  show("#done");if(stars>=2||sessGain.lvUp){confetti();fanfare();}else if(stars===0)setTimeout(loseJingle,200);}
 $("#card").addEventListener("click",e=>{if(e.target.closest("button")||e.target.closest(".padCell"))return;if(setMode==="yomi"&&SR&&!revealed&&!answered&&!recBusy){autoListen=true;startVoice();}});
 $("#clearBtn").onclick=clearAllCells;
 $("#revealBtn").onclick=()=>{if(setMode==="kaki"){doReveal(true);padCells.forEach(c=>{c.fbSvg.innerHTML="";numberedModel(c,c.fbSvg);});$("#rightBtn").textContent="⭕ できた";$("#wrongBtn").textContent="❌ 次へ";$("#judgeRow").style.display="flex";}else doReveal();};
