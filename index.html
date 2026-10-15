@@ -584,7 +584,21 @@ svgWork.style.cssText="position:absolute;left:-9999px;top:-9999px;opacity:0;poin
 const svgWorkPath=document.createElementNS(svgNS,"path");svgWork.appendChild(svgWorkPath);document.body.appendChild(svgWork);
 const refCache={};
 function samplePathD(d,n){svgWorkPath.setAttribute("d",d);let len=0;try{len=svgWorkPath.getTotalLength();}catch(e){len=0;}const pts=[];for(let i=0;i<n;i++){const l=(n===1)?0:len*(i/(n-1));let pt;try{pt=svgWorkPath.getPointAtLength(l);}catch(e){pt={x:0,y:0};}pts.push({x:pt.x,y:pt.y});}return pts;}
-function refPolys(ch){if(refCache[ch])return refCache[ch];const ds=KANJIVG&&KANJIVG[ch];if(!ds)return null;return refCache[ch]=ds.map(d=>samplePathD(d,48));}
+/* KanjiVG の線（M/C/S/L…）を自前で点列に直す */
+function parsePathPts(d){const tk=d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e-?\d+)?/g)||[];let i=0,cmd="",x=0,y=0,sx=0,sy=0,px=null,py=null;const out=[];
+  const num=()=>parseFloat(tk[i++]);const isN=()=>i<tk.length&&!/[a-zA-Z]/.test(tk[i]);
+  const cubic=(x1,y1,x2,y2,x3,y3)=>{for(let k=1;k<=10;k++){const t=k/10,u=1-t;out.push({x:u*u*u*x+3*u*u*t*x1+3*u*t*t*x2+t*t*t*x3,y:u*u*u*y+3*u*u*t*y1+3*u*t*t*y2+t*t*t*y3});}px=x2;py=y2;x=x3;y=y3;};
+  while(i<tk.length){if(/[a-zA-Z]/.test(tk[i]))cmd=tk[i++];const rel=cmd===cmd.toLowerCase(),C=cmd.toUpperCase();
+    if(C==="M"){x=(rel?x:0)+num();y=(rel?y:0)+num();sx=x;sy=y;out.push({x,y});cmd=rel?"l":"L";px=null;continue;}
+    if(C==="C"){const a=num(),b=num(),c=num(),e=num(),f=num(),g=num();const ox=rel?x:0,oy=rel?y:0;cubic(ox+a,oy+b,ox+c,oy+e,ox+f,oy+g);continue;}
+    if(C==="S"){const c=num(),e=num(),f=num(),g=num();const ox=rel?x:0,oy=rel?y:0;const x1=px===null?x:2*x-px,y1=py===null?y:2*y-py;cubic(x1,y1,ox+c,oy+e,ox+f,oy+g);continue;}
+    if(C==="L"){x=(rel?x:0)+num();y=(rel?y:0)+num();out.push({x,y});px=null;continue;}
+    if(C==="H"){x=(rel?x:0)+num();out.push({x,y});px=null;continue;}
+    if(C==="V"){y=(rel?y:0)+num();out.push({x,y});px=null;continue;}
+    if(C==="Z"){x=sx;y=sy;out.push({x,y});px=null;continue;}
+    i++;}
+  return out;}
+function refPolys(ch){if(refCache[ch])return refCache[ch];const ds=KANJIVG&&KANJIVG[ch];if(!ds)return null;return refCache[ch]=ds.map(d=>resample(parsePathPts(d),48));}
 function resample(pts,n){if(!pts.length)return new Array(n).fill({x:0,y:0});if(pts.length===1)return new Array(n).fill(pts[0]);
   const segLens=[];let total=0;for(let i=1;i<pts.length;i++){const l=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);segLens.push(l);total+=l;}
   if(total===0)return new Array(n).fill(pts[0]);
@@ -672,11 +686,7 @@ $("#animBtn").onclick=()=>{usedHelp=true;padCells.forEach(c=>animateCell(c));};
 $("#penOnlyBtn").onclick=()=>{store.g.penOnly=!store.g.penOnly;persist();syncPenBtn();toast(store.g.penOnly?"🖊 ペンだけモード：指・手のひらでは線が出ません":"✋ 指でも書けるモードにしました");};
 function syncPenBtn(){$("#penOnlyBtn").classList.toggle("on",!!store.g.penOnly);}
 
-/* ===== 書きの自動判定 =====
-   ・字の位置と大きさのずれは、外接枠で正規化して吸収
-   ・1画ずつ、手本（KanjiVG）と形・向きを比べる
-   ・画の対応は動的計画法で取る（続け書き・画の分かれも検出）
-   ・書き順ちがいは、順番を無視した対応と比べて検出 */
+/* ===== 書きの判定で使う小道具（コーチモードと共通） ===== */
 const NP=24;
 function bboxNorm(strokes){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;strokes.forEach(s=>s.forEach(p=>{if(p.x<x0)x0=p.x;if(p.y<y0)y0=p.y;if(p.x>x1)x1=p.x;if(p.y>y1)y1=p.y;}));
   const sz=Math.max(x1-x0,y1-y0,1e-6),cx=(x0+x1)/2,cy=(y0+y1)/2;return strokes.map(s=>s.map(p=>({x:(p.x-cx)/sz,y:(p.y-cy)/sz})));}
@@ -685,73 +695,65 @@ function concat(arr){return arr.reduce((a,s)=>a.concat(s),[]);}
 function plen(s){let l=0;for(let i=1;i<s.length;i++)l+=Math.hypot(s[i].x-s[i-1].x,s[i].y-s[i-1].y);return l;}
 /* 続け書き・分け書きは、線の長さがつながった手本と同じくらいのときだけ認める */
 function lenPen(lu,lr){const q=lu/Math.max(lr,1e-6);return q<0.8||q>1.25?0.3:0;}
-function judgeCell(cell){
-  const ref=refPolys(cell.ch);if(!ref)return null;
-  if(!cell.strokes.length)return{pass:false,score:0,notes:["まだ書いていません"],cls:[],empty:true};
-  const R=bboxNorm(ref),U=bboxNorm(cell.strokes);
-  const Rs=R.map(s=>resample(s,NP)),Us=U.map(s=>resample(s,NP));
-  const n=Us.length,m=Rs.length;
-  const MISS=0.45,MERGE=0.05;const sl=s=>plen(resample(s,10));const Lu=U.map(sl),Lr=R.map(sl);
-  const D=[],B=[];for(let i=0;i<=n;i++){D.push(new Array(m+1).fill(1e9));B.push(new Array(m+1).fill(null));}D[0][0]=0;
-  const fwd=(u,r)=>sdist(u,r);
-  for(let i=0;i<=n;i++)for(let j=0;j<=m;j++){const c0=D[i][j];if(c0>=1e9)continue;
-    const relax=(i2,j2,c,op)=>{if(i2<=n&&j2<=m&&c0+c<D[i2][j2]){D[i2][j2]=c0+c;B[i2][j2]={i,j,op,c};}};
-    if(i<n&&j<m)relax(i+1,j+1,fwd(Us[i],Rs[j]),"1");
-    const gapR=(j+1<m)?Math.hypot(R[j][R[j].length-1].x-R[j+1][0].x,R[j][R[j].length-1].y-R[j+1][0].y):9;
-    if(i<n&&j+1<m&&gapR<0.25){const cr=concat([R[j],R[j+1]]);relax(i+1,j+2,fwd(Us[i],resample(cr,NP))+MERGE+lenPen(Lu[i],Lr[j]+Lr[j+1]),"merge");}
-    const gapU=(i+1<n)?Math.hypot(U[i][U[i].length-1].x-U[i+1][0].x,U[i][U[i].length-1].y-U[i+1][0].y):9;
-    if(i+1<n&&j<m&&gapU<0.2){const cu=concat([U[i],U[i+1]]);relax(i+2,j+1,fwd(resample(cu,NP),Rs[j])+MERGE+lenPen(Lu[i]+Lu[i+1],Lr[j]),"split");}
-    if(j<m)relax(i,j+1,MISS,"miss");
-    if(i<n)relax(i+1,j,MISS,"extra");}
-  const ops=[];let i=n,j=m;while(i>0||j>0){const b=B[i][j];if(!b)break;ops.unshift(Object.assign({},b,{i2:i,j2:j}));i=b.i;j=b.j;}
-  const cls=new Array(n).fill("ok"),notes=[],pairs1=[];let miss=0,extra=0,merge=0,split=0,bad=0,sum=0,cnt=0,rev=0;const badRef=[];
-  ops.forEach(o=>{
-    if(o.op==="miss"){miss++;badRef.push(o.j);return;}
-    if(o.op==="extra"){extra++;cls[o.i]="bad";return;}
-    if(o.op==="merge"){merge++;cls[o.i]="warn";}
-    if(o.op==="split"){split++;cls[o.i]="warn";cls[o.i+1]="warn";}
-    let c=o.c-(o.op==="1"?0:MERGE);
-    if(o.op==="1"){const rv=sdist(Us[o.i].slice().reverse(),Rs[o.j]);if(c>0.07&&rv<c*0.6){rev++;cls[o.i]="warn";notes.push((o.j+1)+"画目の向きが逆");c=rv;}}
-    sum+=c;cnt++;
-    if(c>0.19||(o.op!=="1"&&c>0.15)){bad++;cls[o.i]="bad";if(o.op==="split")cls[o.i+1]="bad";badRef.push(o.j);}
-    else if(o.op==="1")pairs1.push([o.i,o.j]);});
-  /* 長さのバランス（土と士、未と末など） */
-  const dir=s=>{const a=s[0],b=s[s.length-1];const l=Math.hypot(b.x-a.x,b.y-a.y)||1e-6;return{x:(b.x-a.x)/l,y:(b.y-a.y)/l,str:l/Math.max(plen(s),1e-6)};};
-  let bal=0;if(m<=8)for(const[a,ja]of pairs1)for(const[b,jb]of pairs1){if(a===b||bal>=2)continue;const da=dir(R[ja]),db=dir(R[jb]);
-    if(da.str<0.95||db.str<0.95||Math.abs(da.x*db.x+da.y*db.y)<0.95)continue; /* まっすぐで平行な2画だけ（土と士、未と末など） */
-    const ca=R[ja][Math.floor(R[ja].length/2)],cb=R[jb][Math.floor(R[jb].length/2)];if(Math.hypot(ca.x-cb.x,ca.y-cb.y)>0.5)continue;
-    if(Lr[ja]/Lr[jb]>1.45&&Lu[a]/Lu[b]<0.95){bal++;if(cls[a]==="ok")cls[a]="bad";if(cls[b]==="ok")cls[b]="bad";notes.push((ja+1)+"画目は"+(jb+1)+"画目より長く書く");}}
-  if(bal)bad+=bal;
-  /* 書き順チェック：画数が同じで、順番を無視するとぴったり合う場合 */
-  let orderErr=0;
-  if(n===m&&n>1){const used=new Array(m).fill(false);let gsum=0;const asg=[];
-    const pairs=[];for(let a=0;a<n;a++)for(let b=0;b<m;b++)pairs.push([sdist(Us[a],Rs[b]),a,b]);pairs.sort((x,y)=>x[0]-y[0]);
-    const ua=new Array(n).fill(false);pairs.forEach(([d,a,b])=>{if(!ua[a]&&!used[b]){ua[a]=used[b]=true;asg[a]=b;gsum+=d;}});
-    const inOrder=ops.filter(o=>o.op==="1").length===n?sum:1e9;
-    if(gsum/n<0.12&&gsum<inOrder-0.08){const wrong=[];for(let a=0;a<n;a++)if(asg[a]!==a&&sdist(Us[a],Rs[a])>0.15&&sdist(Us[a],Rs[asg[a]])<0.13){wrong.push(a);}orderErr=wrong.length;
-      if(orderErr){notes.push("書き順がちがう："+wrong.map(a=>(a+1)+"番目に書いた線は"+(asg[a]+1)+"画目").join("、"));wrong.forEach(a=>{if(cls[a]==="ok")cls[a]="warn";});
-        /* 形は合っているので、形の評価は順番を無視した対応で */
-        sum=gsum;cnt=n;bad=0;miss=0;extra=0;merge=0;split=0;for(let a=0;a<n;a++)if(cls[a]==="bad")cls[a]="warn";badRef.length=0;for(let k=notes.length-1;k>=0;k--)if(/長く書く|向きが逆/.test(notes[k]))notes.splice(k,1);}}}
-  const mean=cnt?sum/cnt:1;
-  if(n<m)notes.unshift("画数が足りない（"+n+"画／正しくは"+m+"画）");
-  else if(n>m)notes.unshift("画数が多い（"+n+"画／正しくは"+m+"画）");
-  else if(miss||extra)notes.unshift("手本にない線がある");
-  if(merge)notes.push("続けて書いた画がある（"+merge+"か所）");
-  if(split)notes.push("1画を分けて書いたところがある");
-  if(badRef.length)notes.push("形がちがう画："+[...new Set(badRef)].sort((a,b)=>a-b).map(j=>(j+1)+"画目").join("・"));
-  let score=100-Math.max(0,mean-0.035)*330-miss*18-extra*18-merge*6-split*6-orderErr*4-rev*5-bad*10;
-  score=Math.max(0,Math.min(100,Math.round(score)));
-  const pass=!miss&&!extra&&bad===0&&mean<0.13&&score>=55;
-  return{pass,score,notes,cls,badRef:[...new Set(badRef)],orderErr,mean};}
+/* ===== OCR方式の判定 =====
+   「その字として読めるか」だけを見る。書き順・画の向き・続け書き・画数の多少は問わない。
+   手書き文字認識でよく使う「方向特徴」：字を 8×8 のマスに分け、マスごとに
+   横・縦・右上がり・右下がりの線がどれだけあるかを数えたもの。
+   収録漢字ぜんぶと比べて、いちばん近い字（＝読み取り結果）が正解の字なら合格。 */
+const OG=8,ODIM=OG*OG*4;
+function smoothStrokes(strokes,sz){return strokes.map(s=>{const L=plen(s);const n=Math.max(3,Math.min(40,Math.ceil(L/(sz*0.035))+1));const r=resample(s,n);
+    if(n<5)return r;return r.map((p,i)=>i===0||i===n-1?p:{x:(r[i-1].x+2*p.x+r[i+1].x)/4,y:(r[i-1].y+2*p.y+r[i+1].y)/4});});}
+function dirFeature(strokes0){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;strokes0.forEach(s=>s.forEach(p=>{if(p.x<x0)x0=p.x;if(p.y<y0)y0=p.y;if(p.x>x1)x1=p.x;if(p.y>y1)y1=p.y;}));
+  const sz=Math.max(x1-x0,y1-y0,1e-6),cx=(x0+x1)/2,cy=(y0+y1)/2;const strokes=smoothStrokes(strokes0,sz);
+  const F=new Float32Array(ODIM);
+  const add=(mx,my,b0,w)=>{const gx=mx*OG-.5,gy=my*OG-.5,ix=Math.floor(gx),iy=Math.floor(gy),fx=gx-ix,fy=gy-iy;
+    for(const[dx,dy,ww]of[[0,0,(1-fx)*(1-fy)],[1,0,fx*(1-fy)],[0,1,(1-fx)*fy],[1,1,fx*fy]]){const X=ix+dx,Y=iy+dy;if(X<0||Y<0||X>=OG||Y>=OG)continue;F[(Y*OG+X)*4+b0]+=w*ww;}};
+  strokes.forEach(s=>{for(let i=1;i<s.length;i++){
+    const ax=(s[i-1].x-cx)/sz+.5,ay=(s[i-1].y-cy)/sz+.5,bx=(s[i].x-cx)/sz+.5,by=(s[i].y-cy)/sz+.5;
+    const L=Math.hypot(bx-ax,by-ay);if(L<1e-6)continue;
+    let th=Math.atan2(by-ay,bx-ax);if(th<0)th+=Math.PI;if(th>=Math.PI)th-=Math.PI;
+    const f=th/(Math.PI/4),b0=Math.floor(f)%4,b1=(b0+1)%4,w1=f-Math.floor(f);
+    const steps=Math.max(1,Math.ceil(L/0.03));
+    for(let k=0;k<steps;k++){const t=(k+.5)/steps,mx=ax+(bx-ax)*t,my=ay+(by-ay)*t,l=L/steps;add(mx,my,b0,l*(1-w1));add(mx,my,b1,l*w1);}}});
+  /* となりのマスに少しぼかす（位置のずれに強くする） */
+  const G=new Float32Array(ODIM);
+  for(let y=0;y<OG;y++)for(let x=0;x<OG;x++)for(let d=0;d<4;d++){let v=0,wsum=0;
+    for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++){const X=x+xx,Y=y+yy;if(X<0||Y<0||X>=OG||Y>=OG)continue;const w=(xx||yy)?(xx&&yy?.25:.5):1;v+=F[(Y*OG+X)*4+d]*w;wsum+=w;}
+    G[(y*OG+x)*4+d]=v/wsum;}
+  let n=0;for(let i=0;i<ODIM;i++){G[i]=Math.sqrt(G[i]);n+=G[i]*G[i];}n=Math.sqrt(n)||1;for(let i=0;i<ODIM;i++)G[i]/=n;
+  return G;}
+function cosSim(a,b){let s=0;for(let i=0;i<ODIM;i++)s+=a[i]*b[i];return s;}
+const refFeatCache={};
+function refFeat(ch){if(refFeatCache[ch])return refFeatCache[ch];const r=refPolys(ch);if(!r)return null;return refFeatCache[ch]=dirFeature(r);}
+let OCR_CHARS=null;
+function ocrCell(cell){
+  if(!cell.strokes.length)return{pass:false,score:0,guess:null,empty:true};
+  if(!OCR_CHARS)OCR_CHARS=Object.keys(KANJIVG).filter(c=>/[一-鿿々]/.test(c));
+  const U=dirFeature(cell.strokes);const tf=refFeat(cell.ch);if(!tf)return null;const sT=cosSim(U,tf);
+  let better=[];
+  for(const c of OCR_CHARS){if(c===cell.ch)continue;const sc=cosSim(U,refFeat(c));if(sc>sT)better.push([sc,c]);}
+  better.sort((a,b)=>b[0]-a[0]);
+  const rank=better.length+1,best=better.length?better[0]:[sT,cell.ch];
+  /* 合格：読み取り1位が正解、または上位3位以内でほぼ同点（似た字どうし）。形の近さも一定以上 */
+  const pass=sT>=OCR_MIN&&(rank<=OCR_TOPK||sT>=best[0]-OCR_TIE);
+  const score=Math.max(0,Math.min(100,Math.round((sT-0.6)/0.37*100)));
+  return{pass,score,guess:pass?cell.ch:best[1],sT,rank,best:best[0]};}
+let OCR_MIN=0.82,OCR_TOPK=5,OCR_TIE=0.03;
+/* 手本の特徴は読み込み後にすこしずつ作っておく（最初の判定が待たされないように） */
+function warmOcr(){if(!KANJIVG)return setTimeout(warmOcr,500);if(!OCR_CHARS)OCR_CHARS=Object.keys(KANJIVG).filter(c=>/[一-鿿々]/.test(c));let i=0;
+  (function step(){const t=performance.now();while(i<OCR_CHARS.length&&performance.now()-t<12){refFeat(OCR_CHARS[i++]);}if(i<OCR_CHARS.length)setTimeout(step,30);})();}
+setTimeout(warmOcr,1500);
 const CLS_COL={ok:"#1b2430",warn:"#e08a00",bad:"#e23b3b"};
-function showJudge(){const res=padCells.map(c=>({c,r:judgeCell(c)}));let allPass=true,sum=0,cnt=0;const lines=[];
-  res.forEach(({c,r})=>{if(!r)return;cnt++;sum+=r.score;if(!r.pass)allPass=false;
-    c.colors=r.cls.map(k=>CLS_COL[k]);redrawCell(c);c.inner.classList.add(r.pass?"pass":"fail");c.scoreBadge.textContent=r.score+"点";
-    if(!r.pass||r.notes.length){c.fbSvg.innerHTML="";numberedModel(c,c.fbSvg,r.pass?"#7ec8ff":"#2f7fbf");}
-    if(r.notes.length)lines.push("<b>"+esc(c.ch)+"</b>："+r.notes.map(esc).join("／"));});
+function showJudge(){let allPass=true,sum=0,cnt=0;const lines=[];
+  padCells.forEach(c=>{const r=ocrCell(c);if(!r)return;cnt++;sum+=r.score;if(!r.pass)allPass=false;
+    c.colors=c.strokes.map(()=>r.pass?"#1b2430":"#e23b3b");redrawCell(c);c.inner.classList.add(r.pass?"pass":"fail");c.scoreBadge.textContent=r.pass?"読めた！":"";
+    if(!r.pass){c.fbSvg.innerHTML="";numberedModel(c,c.fbSvg,"#2f7fbf");}
+    if(r.empty)lines.push("<b>"+esc(c.ch)+"</b>：まだ書いていません");
+    else if(!r.pass)lines.push("<b>"+esc(c.ch)+"</b>："+(r.guess&&r.guess!==c.ch?"「"+esc(r.guess)+"」に見えるよ":"うまく読み取れなかったよ")+"。青い手本とくらべてみよう");});
   const avg=cnt?Math.round(sum/cnt):0;
   const fb=$("#fbBox");fb.style.display="block";
-  fb.innerHTML='<div class="h" style="color:'+(allPass?'var(--good)':'var(--bad)')+'">'+(allPass?(avg>=90?"🌟 合格！ きれい！":"⭕ 合格！"):"❌ おしい！ 手本とくらべてみよう")+'　<span style="color:var(--blue)">'+avg+'点</span></div>'+(lines.length?'<ul><li>'+lines.join("</li><li>")+'</li></ul>':'')+'<div class="small" style="color:var(--sub);text-align:left;">青い線が手本（赤い数字は書き順）。オレンジ＝注意、赤＝まちがい。判定がおかしいときは下のボタンで直せます。</div>';
+  fb.innerHTML='<div class="h" style="color:'+(allPass?'var(--good)':'var(--bad)')+'">'+(allPass?"⭕ 合格！ ちゃんと読めるよ":"❌ おしい！")+'</div>'+(lines.length?'<ul><li>'+lines.join("</li><li>")+'</li></ul>':'')+'<div class="small" style="color:var(--sub);text-align:left;">'+(allPass?"書き順や線の向きは採点していません。":"青い線が手本（赤い数字は書き順）。")+'判定がおかしいときは下のボタンで直せます。</div>';
   return{allPass,avg};}
 
 /* コーチモード：1画書くたびに手本の同じ画とくらべる */
